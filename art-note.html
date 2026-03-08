@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="美術ノート">
+<meta name="mobile-web-app-capable" content="yes">
+<title>私の美術ノート</title>
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --dark: #2c2416;
+    --mid: #8b6914;
+    --soft: #ede8de;
+    --border: #d4c9b0;
+    --text: #3a2e1e;
+    --muted: #8b7355;
+    --white: #faf8f3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Georgia', 'Hiragino Mincho ProN', serif; background: var(--bg); color: var(--dark); min-height: 100vh; padding-bottom: 80px; }
+
+  /* Header */
+  .header { background: var(--dark); color: var(--bg); padding: 48px 20px 18px; text-align: center; position: sticky; top: 0; z-index: 100; }
+  .header-sub { font-size: 9px; letter-spacing: 4px; opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; }
+  .header-title { font-size: 22px; font-weight: bold; letter-spacing: 1px; }
+
+  /* Search */
+  .search-wrap { padding: 10px 16px; background: var(--soft); border-bottom: 1px solid var(--border); position: sticky; top: 84px; z-index: 99; }
+  .search-wrap input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 20px; background: var(--white); font-size: 13px; font-family: inherit; outline: none; color: var(--dark); }
+
+  /* Tabs */
+  .tabs { display: flex; background: var(--soft); border-bottom: 2px solid var(--border); position: sticky; top: 134px; z-index: 98; }
+  .tab { flex: 1; padding: 10px 2px 8px; border: none; background: transparent; font-size: 10px; font-family: inherit; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -2px; line-height: 1.4; }
+  .tab.active { color: var(--mid); border-bottom-color: var(--mid); font-weight: bold; background: var(--bg); }
+
+  /* Content */
+  .content { padding: 14px 14px 0; max-width: 600px; margin: 0 auto; }
+
+  /* Timeline */
+  .tl-item { display: flex; margin-bottom: 4px; }
+  .tl-bar { width: 3px; border-radius: 2px; margin-right: 10px; flex-shrink: 0; min-height: 100%; }
+  .tl-card { flex: 1; background: var(--white); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 4px; }
+  .tl-head { padding: 12px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .tl-period { font-size: 9px; color: var(--muted); display: block; margin-bottom: 2px; }
+  .tl-name { font-size: 15px; font-weight: bold; }
+  .tl-en { font-size: 10px; color: var(--muted); margin-left: 6px; }
+  .tl-arrow { font-size: 12px; flex-shrink: 0; margin-left: 8px; }
+  .tl-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+  .tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+  .tl-body { padding: 0 14px 14px; border-top: 1px dotted var(--border); }
+  .tl-summary { font-size: 13px; line-height: 1.75; color: var(--text); margin: 10px 0; }
+  .tl-event { font-size: 11px; background: #fff8e1; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #f0a500; margin-bottom: 10px; }
+  .tl-section-title { font-size: 10px; color: var(--muted); margin: 8px 0 4px; }
+  .artist-tag { display: inline-block; font-size: 11px; background: var(--soft); padding: 2px 9px; border-radius: 10px; margin: 2px; }
+  .work-item { font-size: 12px; color: var(--text); padding: 4px 0; border-bottom: 1px dotted var(--border); line-height: 1.6; }
+  .tl-note { font-size: 11px; color: #5a4a2e; background: var(--soft); padding: 7px 10px; border-radius: 6px; margin-top: 8px; line-height: 1.6; }
+  .connector { margin-left: 13px; height: 6px; width: 1px; background: var(--border); }
+
+  /* People / Concepts */
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .card-head { padding: 13px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .card-name { font-size: 14px; font-weight: bold; }
+  .card-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .card-badge { font-size: 10px; background: var(--soft); padding: 3px 9px; border-radius: 10px; white-space: nowrap; }
+  .card-body { padding: 10px 14px 14px; border-top: 1px dotted var(--border); font-size: 13px; line-height: 1.75; color: var(--text); }
+
+  /* Memo */
+  .memo-form { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .memo-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  textarea { width: 100%; min-height: 80px; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; resize: vertical; background: var(--bg); outline: none; color: var(--dark); line-height: 1.6; }
+  .btn { padding: 9px 22px; background: var(--dark); color: var(--bg); border: none; border-radius: 8px; font-size: 12px; font-family: inherit; cursor: pointer; margin-top: 8px; }
+  .memo-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; margin-bottom: 8px; }
+  .memo-meta { display: flex; justify-content: space-between; margin-bottom: 7px; }
+  .memo-date { font-size: 10px; color: var(--muted); }
+  .memo-del { font-size: 10px; color: #c0a080; background: none; border: none; cursor: pointer; font-family: inherit; }
+  .memo-text { font-size: 13px; line-height: 1.75; color: var(--text); }
+  .empty { text-align: center; color: var(--muted); font-size: 12px; padding: 30px 0; }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-sub">My Art Journal</div>
+  <div class="header-title">私の美術ノート</div>
+</div>
+
+<div class="search-wrap">
+  <input type="search" id="searchInput" placeholder="🔍 キーワードで検索..." oninput="doSearch()">
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('timeline', this)">⏱<br>年表</button>
+  <button class="tab" onclick="switchTab('people', this)">👤<br>人物</button>
+  <button class="tab" onclick="switchTab('concepts', this)">💡<br>用語</button>
+  <button class="tab" onclick="switchTab('memo', this)">📝<br>メモ</button>
+</div>
+
+<div class="content">
+  <!-- TIMELINE -->
+  <div id="tab-timeline">
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:12px;">タップで詳細を開く</p>
+    <div id="timeline-list"></div>
+  </div>
+
+  <!-- PEOPLE -->
+  <div id="tab-people" class="hidden">
+    <div id="people-list"></div>
+  </div>
+
+  <!-- CONCEPTS -->
+  <div id="tab-concepts" class="hidden">
+    <div id="concepts-list"></div>
+  </div>
+
+  <!-- MEMO -->
+  <div id="tab-memo" class="hidden">
+    <div class="memo-form">
+      <div class="memo-label">展示を見て気づいたこと、感想など</div>
+      <textarea id="memoInput" placeholder="例：モネ展に行った。睡蓮の実物は思ったより大きかった…"></textarea>
+      <button class="btn" onclick="saveMemo()">保存する</button>
+    </div>
+    <div id="memo-list"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  timeline: [
+    { id:"rococo", period:"1700年代", name:"ロココ", en:"Rococo", color:"#d4a0c0",
+      keywords:["優雅","享楽","恋愛","貴族文化"],
+      summary:"ヴェルサイユ宮殿を中心とした貴族文化の全盛期。戦争より恋愛・パーティー・庭園での逢瀬が題材。貴族のオーダーメイドで描かれた。",
+      event:"1789年 フランス革命でロココ終焉",
+      artists:["フラゴナール"],
+      works:["ぶらんこ（フラゴナール）— 夫に気づかれず愛人と密会する場面をふわっと明るく描いた作品"],
+      note:"「誰のために描くか」→貴族のため" },
+    { id:"impressionism", period:"1870年代〜", name:"印象派", en:"Impressionism", color:"#7ab8d4",
+      keywords:["光","瞬間","外の世界","輪郭を壊す"],
+      summary:"「光と瞬間を捉えたい」。輪郭をぼかし、色と筆触で光の揺らぎを表現。審査なしの自前展覧会から始まった反骨の運動。",
+      event:"1874年 最初の印象派展",
+      artists:["モネ","ルノワール","ドガ"],
+      works:["印象・日の出（モネ）— 批評家の悪口がそのまま名前になった","日傘の女性（モネ）— 輪郭ではなく色と筆触で風と光を表現","睡蓮・橋（モネ）— 自作の庭を何百枚も。モノではなく「光」が主題"],
+      note:"「何を描くか」→光という現象。浮世絵（ジャポニスム）の影響を受けた" },
+    { id:"post-imp", period:"1880〜1900年代", name:"ポスト印象派", en:"Post-Impressionism", color:"#e8a87c",
+      keywords:["感情表現","内側の世界","印象派への反発"],
+      summary:"「印象派で学んだけど、それだけじゃ足りない」と感じた人たちの総称。一つのグループではなく、それぞれ別の方向へ進んだ。",
+      event:"",
+      artists:["ゴッホ","セザンヌ","ゴーギャン"],
+      works:["星月夜（ゴッホ）— 空が渦巻く。感情が爆発している"],
+      note:"「何を描くか」→内側の感情。セザンヌはピカソの父と呼ばれる" },
+    { id:"artnouveau", period:"1890〜1910年代", name:"アール・ヌーヴォー", en:"Art Nouveau", color:"#a8c5a0",
+      keywords:["自然の曲線","装飾","新しい芸術","ジャポニスム"],
+      summary:"フランス語で「新しい芸術」。植物のつる・花・髪などの有機的曲線を装飾に使うスタイル。絵画だけでなく工芸・建築・ポスターにも広がった。",
+      event:"",
+      artists:["クリムト（ウィーン）","ミュシャ（チェコ）"],
+      works:["接吻（クリムト）— 金箔のような装飾、植物的な模様、官能的表現","ミュシャのポスター群 — 女性と植物が有機的曲線で絡み合う"],
+      note:"印象派と同じくジャポニスムの影響。クリムトとミュシャは混同しやすいが同時代の別人" },
+    { id:"fauvism", period:"1905年頃", name:"フォービズム（野獣派）", en:"Fauvism", color:"#e85d5d",
+      keywords:["原色","感情の色","現実と違っていい"],
+      summary:"「色は感情の表現。現実の色と違っていい」。絵の具をぶつけるような原色使い。批評家の悪口「野獣だ！」がそのまま名前になった（印象派と同じパターン）。",
+      event:"", artists:["マティス"], works:[], note:"命名のされ方が印象派と同じパターン" },
+    { id:"cubism", period:"1907年頃", name:"キュビスム", en:"Cubism", color:"#8b7355",
+      keywords:["形の分解","複数の視点","セザンヌの影響"],
+      summary:"「形を分解する」。正面と横顔を同時に描く、あの崩れた顔。セザンヌの「形の本質を追求する」という姿勢から発展した。",
+      event:"", artists:["ピカソ","ブラック"], works:[], note:"アフリカの仮面・彫刻からも影響を受けた" },
+    { id:"abstract", period:"1910年頃〜", name:"抽象表現", en:"Abstract Art", color:"#6b8cba",
+      keywords:["形も不要","色と形だけで感情","世界初の抽象絵画"],
+      summary:"「具体的なモノを描かなくても、色と形だけで感情を伝えられる」。世界初の抽象絵画と言われる作品を描いた。",
+      event:"", artists:["カンディンスキー（ロシア→ドイツ）"], works:[], note:"" },
+    { id:"dada", period:"1916年頃", name:"ダダイスム", en:"Dadaism", color:"#555555",
+      keywords:["全部壊す","意味の解体","戦争への怒り"],
+      summary:"第一次世界大戦（1914-18）の衝撃が生んだ運動。「理性的な文明国が何百万人も殺し合った。理性も芸術も全部ウソ」という虚無と怒り。便器に「泉」とタイトルをつけて展示するなど、意味を意図的に壊した。",
+      event:"1914〜18年 第一次世界大戦",
+      artists:["デュシャン"],
+      works:["泉（デュシャン）— 便器に「泉」とタイトルをつけて美術展に出した"],
+      note:"「分からなくさせること」が目的だったので分からなくて正常" },
+    { id:"surrealism", period:"1924年〜", name:"シュールレアリスム", en:"Surrealism", color:"#7c5cbf",
+      keywords:["夢","無意識","フロイトの影響","怖い・不安"],
+      summary:"「夢や無意識こそ人間の真実」。フロイトの精神分析に強く影響された。怖さや不安を感じるのは作品が正しく機能している証拠。印象派より約50〜60年後の運動。",
+      event:"1924年 シュールレアリスム宣言",
+      artists:["ダリ","マグリット"],
+      works:["記憶の固執（ダリ）— 溶ける時計"],
+      note:"岡本太郎はシュールレアリスムをパリで学んで日本に持ち帰った" }
+  ],
+  people: [
+    { id:"monet", name:"クロード・モネ", en:"Claude Monet", period:"1840-1926", movement:"印象派", country:"フランス", note:"「光と瞬間」を追求。同じモチーフを何度も描いたのはモノではなく「その瞬間の光」が主題だったから。晩年は白内障でほぼ失明しながら睡蓮を描き続けた。ジヴェルニーに自分で庭を作り日本風の橋を架けた。" },
+    { id:"fragonard", name:"フラゴナール", en:"Jean-Honoré Fragonard", period:"1732-1806", movement:"ロココ", country:"フランス", note:"恋愛と官能を軽やかに描いた。フランス革命後に後援者を失い晩年は忘れられた存在に。" },
+    { id:"klimt", name:"クリムト", en:"Gustav Klimt", period:"1862-1918", movement:"アール・ヌーヴォー", country:"オーストリア（ウィーン）", note:"金箔のような装飾、植物的な模様、官能的表現。ミュシャと混同されやすいが別人・別国。" },
+    { id:"mucha", name:"ミュシャ", en:"Alphonse Mucha", period:"1860-1939", movement:"アール・ヌーヴォー", country:"チェコ", note:"女性と植物が有機的曲線で絡み合うポスターで有名。クリムトと同時代だが別人。" },
+    { id:"vangogh", name:"ゴッホ", en:"Vincent van Gogh", period:"1853-1890", movement:"ポスト印象派", country:"オランダ→フランス", note:"色と筆触で感情を表現。渦巻く星月夜が代表作。大ゴッホ展の予習に。" },
+    { id:"kandinsky", name:"カンディンスキー", en:"Wassily Kandinsky", period:"1866-1944", movement:"抽象表現", country:"ロシア→ドイツ", note:"世界初の抽象絵画と言われる作品を描いた。「形も具体的なモノも要らない」。" },
+    { id:"utrillo", name:"ユトリロ", en:"Maurice Utrillo", period:"1883-1955", movement:"ポスト印象派の時代", country:"フランス", note:"パリのモンマルトルを描いた。" },
+    { id:"shonibare", name:"ショニバレ", en:"Yinka Shonibare", period:"1962-", movement:"現代美術", country:"ナイジェリア系イギリス人", note:"「西洋美術史の中心はヨーロッパだけか？」という問いを作品にしている。" },
+    { id:"okamoto", name:"岡本太郎", en:"Taro Okamoto", period:"1911-1996", movement:"前衛", country:"日本", note:"シュールレアリスムをパリで学んで日本に持ち帰った。太陽の塔は1970年大阪万博のために制作。" }
+  ],
+  concepts: [
+    { id:"japonisme", name:"ジャポニスム", note:"19世紀ヨーロッパでの日本美術（浮世絵）の大流行。モネもアール・ヌーヴォーも影響を受けた。影響を与えた側は北斎・広重など。" },
+    { id:"artzone", name:"アーティゾン美術館", note:"「ART」＋「HORIZON（地平）」の造語。建築の工夫：①外の柱が館内に入ってくる ②床が上階ほど色が濃くなるグラデーション ③床の目地（5mm）が空調の吹き出し口 ④照明はタブレットで個別制御。" },
+    { id:"monet-ex", name:"モネ展（2026）", note:"アーティゾン美術館。2026年2月7日〜5月24日。「モネ没後100年 クロード・モネ ―風景への問いかけ」。オルセー美術館所蔵含む約140点。浮世絵・アール・ヌーヴォー工芸との関連展示あり。没入型映像作品も。当初2020年予定がコロナで6年越し実現。" }
+  ]
+};
+
+let expandedId = null;
+let memos = [];
+
+// ---- RENDER ----
+function renderTimeline(items) {
+  const el = document.getElementById('timeline-list');
+  el.innerHTML = items.map((item, i) => `
+    <div class="tl-item">
+      <div class="tl-bar" style="background:${item.color}"></div>
+      <div style="flex:1">
+        <div class="tl-card">
+          <div class="tl-head" onclick="toggle('${item.id}')">
+            <div>
+              <span class="tl-period">${item.period}</span>
+              <span class="tl-name">${item.name}</span>
+              <span class="tl-en">${item.en}</span>
+              <div class="tl-tags">
+                ${item.keywords.map(k=>`<span class="tag" style="background:${item.color}22;color:#5a4a2e">${k}</span>`).join('')}
+              </div>
+            </div>
+            <span class="tl-arrow" id="arr-${item.id}" style="color:${item.color}">▼</span>
+          </div>
+          <div id="body-${item.id}" class="tl-body hidden">
+            <p class="tl-summary">${item.summary}</p>
+            ${item.event ? `<div class="tl-event">📌 ${item.event}</div>` : ''}
+            ${item.artists.length ? `<div class="tl-section-title">主な人物</div><div>${item.artists.map(a=>`<span class="artist-tag">${a}</span>`).join('')}</div>` : ''}
+            ${item.works.length ? `<div class="tl-section-title" style="margin-top:8px">作品メモ</div>${item.works.map(w=>`<div class="work-item">🎨 ${w}</div>`).join('')}` : ''}
+            ${item.note ? `<div class="tl-note">💬 ${item.note}</div>` : ''}
+          </div>
+        </div>
+        ${i < items.length-1 ? '<div class="connector"></div>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPeople(items) {
+  document.getElementById('people-list').innerHTML = items.map(p => `
+    <div class="card">
+      <div class="card-head" onclick="toggle('p-${p.id}')">
+        <div>
+          <div class="card-name">${p.name}</div>
+          <div class="card-sub">${p.en} / ${p.period} / ${p.country}</div>
+        </div>
+        <span class="card-badge">${p.movement}</span>
+      </div>
+      <div id="body-p-${p.id}" class="card-body hidden">${p.note}</div>
+    </div>
+  `).join('');
+}
+
+function renderConcepts(items) {
+  document.getElementById('concepts-list').innerHTML = items.map(c => `
+    <div class="card">
+      <div class="card-head" onclick="toggle('c-${c.id}')">
+        <div class="card-name">${c.name}</div>
+        <span style="font-size:14px;color:var(--muted)">▼</span>
+      </div>
+      <div id="body-c-${c.id}" class="card-body hidden">${c.note}</div>
+    </div>
+  `).join('');
+}
+
+function renderMemos() {
+  const el = document.getElementById('memo-list');
+  if (!memos.length) { el.innerHTML = '<div class="empty">まだメモがありません</div>'; return; }
+  el.innerHTML = [...memos].reverse().map(m => `
+    <div class="memo-card">
+      <div class="memo-meta">
+        <span class="memo-date">${m.date}</span>
+        <button class="memo-del" onclick="deleteMemo(${m.id})">削除</button>
+      </div>
+      <div class="memo-text">${m.text.replace(/\n/g,'<br>')}</div>
+    </div>
+  `).join('');
+}
+
+// ---- INTERACTIONS ----
+function toggle(id) {
+  const body = document.getElementById('body-' + id);
+  const arr = document.getElementById('arr-' + id);
+  if (!body) return;
+  const isOpen = !body.classList.contains('hidden');
+  if (isOpen) {
+    body.classList.add('hidden');
+    if (arr) arr.textContent = '▼';
+  } else {
+    body.classList.remove('hidden');
+    if (arr) arr.textContent = '▲';
+  }
+}
+
+function switchTab(name, btn) {
+  ['timeline','people','concepts','memo'].forEach(t => {
+    document.getElementById('tab-'+t).classList.add('hidden');
+  });
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.remove('hidden');
+  btn.classList.add('active');
+}
+
+function doSearch() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filteredTL = q ? DATA.timeline.filter(i => [i.name,i.en,...i.keywords,i.summary,...i.artists,...i.works,i.note].join(' ').toLowerCase().includes(q)) : DATA.timeline;
+  const filteredP = q ? DATA.people.filter(i => [i.name,i.en,i.movement,i.country,i.note].join(' ').toLowerCase().includes(q)) : DATA.people;
+  const filteredC = q ? DATA.concepts.filter(i => [i.name,i.note].join(' ').toLowerCase().includes(q)) : DATA.concepts;
+  renderTimeline(filteredTL);
+  renderPeople(filteredP);
+  renderConcepts(filteredC);
+}
+
+function saveMemo() {
+  const text = document.getElementById('memoInput').value.trim();
+  if (!text) return;
+  const now = new Date();
+  const date = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+  memos.push({ id: Date.now(), text, date });
+  localStorage.setItem('art-memos', JSON.stringify(memos));
+  document.getElementById('memoInput').value = '';
+  renderMemos();
+}
+
+function deleteMemo(id) {
+  memos = memos.filter(m => m.id !== id);
+  localStorage.setItem('art-memos', JSON.stringify(memos));
+  renderMemos();
+}
+
+// ---- INIT ----
+try { memos = JSON.parse(localStorage.getItem('art-memos') || '[]'); } catch {}
+renderTimeline(DATA.timeline);
+renderPeople(DATA.people);
+renderConcepts(DATA.concepts);
+renderMemos();
+</script>
+</body>
+</html>
